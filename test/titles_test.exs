@@ -15,4 +15,7 @@ defmodule TitlesTest do
 
     assert Titles.convert(input) == expected
   end
+
+  @tag :skip
+  test "Ignore stuff that's not URLs"
 end
