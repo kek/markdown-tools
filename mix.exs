@@ -28,7 +28,8 @@ defmodule Titles.MixProject do
       {:burrito, "~> 1.0"},
       {:mix_test_watch, "~> 1.2", only: :dev, runtime: false},
       {:tesla, "~> 1.8"},
-      {:floki, "~> 0.36.1"}
+      {:floki, "~> 0.36.1"},
+      {:bypass, "~> 2.1", only: :test}
     ]
   end
 

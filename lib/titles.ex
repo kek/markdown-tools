@@ -46,7 +46,7 @@ defmodule Titles do
     input
     |> String.split()
     |> Enum.map(fn line ->
-      IO.write("url -> ")
+      IO.write("#{line} -> ")
 
       {:ok, document} =
         Tesla.get!(line).body
