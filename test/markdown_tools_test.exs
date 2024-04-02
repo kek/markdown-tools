@@ -1,6 +1,6 @@
-defmodule TitlesTest do
+defmodule MarkdownToolsTest do
   use ExUnit.Case
-  doctest Titles
+  doctest MarkdownTools
 
   setup do
     bypass = Bypass.open()
@@ -27,7 +27,7 @@ defmodule TitlesTest do
         Plug.Conn.resp(conn, 200, ~s(<html><head><title>Geocities</title></head></html>))
       end)
 
-      assert Titles.convert(input) == expected
+      assert MarkdownTools.convert(input) == expected
     end
 
     @tag :skip
@@ -47,7 +47,7 @@ defmodule TitlesTest do
       World
       """
 
-      assert Titles.compact(input) == expected
+      assert MarkdownTools.compact(input) == expected
     end
   end
 end

@@ -1,4 +1,4 @@
-defmodule Titles do
+defmodule MarkdownTools do
   require Logger
 
   def start(:normal, []) do
@@ -8,8 +8,8 @@ defmodule Titles do
           case File.read(file) do
             {:ok, input} ->
               case command do
-                "url-fix" -> {:ok, Titles.convert(input)}
-                "compact" -> {:ok, Titles.compact(input)}
+                "url-fix" -> {:ok, MarkdownTools.convert(input)}
+                "compact" -> {:ok, MarkdownTools.compact(input)}
                 other -> {:error, "Unknown command: #{other}"}
               end
 
@@ -28,7 +28,7 @@ defmodule Titles do
     end
 
     # System.halt(0)
-    # opts = [strategy: :one_for_one, name: Titles]
+    # opts = [strategy: :one_for_one, name: MarkdownTools]
     # children = []
     # Supervisor.start_link(children, opts)
     {:ok, self()}
