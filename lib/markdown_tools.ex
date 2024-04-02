@@ -44,20 +44,26 @@ defmodule MarkdownTools do
 
   def convert(input) do
     input
-    |> String.split()
+    |> String.split("\n")
     |> Enum.map(fn line ->
-      IO.write("#{line} -> ")
+      url_regexp = ~r(https?://\S*$)
 
-      {:ok, document} =
-        Tesla.get!(line).body
-        |> Floki.parse_document()
+      if Regex.match?(url_regexp, line) do
+        IO.write("#{line} -> ")
 
-      [{"title", _, [title]}] = Floki.find(document, "title")
+        {:ok, document} =
+          Tesla.get!(line).body
+          |> Floki.parse_document()
 
-      IO.write(title <> "\n")
+        [{"title", _, [title]}] = Floki.find(document, "title")
 
-      "- [#{title}](#{line})\n"
+        IO.write(title <> "\n")
+
+        "- [#{title}](#{line})"
+      else
+        line
+      end
     end)
-    |> Enum.join()
+    |> Enum.join("\n")
   end
 end

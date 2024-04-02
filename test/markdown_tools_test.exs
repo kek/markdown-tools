@@ -30,8 +30,29 @@ defmodule MarkdownToolsTest do
       assert MarkdownTools.convert(input) == expected
     end
 
-    @tag :skip
-    test "Ignore stuff that's not URLs"
+    test "Ignore stuff that's not URLs", %{bypass: bypass} do
+      input = """
+      http://localhost:#{bypass.port}/site1
+      How about that one?
+      http://localhost:#{bypass.port}/site2
+      """
+
+      expected = """
+      - [Altavista](http://localhost:#{bypass.port}/site1)
+      How about that one?
+      - [Geocities](http://localhost:#{bypass.port}/site2)
+      """
+
+      Bypass.expect_once(bypass, "GET", "site1", fn conn ->
+        Plug.Conn.resp(conn, 200, ~s(<html><head><title>Altavista</title></head></html>))
+      end)
+
+      Bypass.expect_once(bypass, "GET", "site2", fn conn ->
+        Plug.Conn.resp(conn, 200, ~s(<html><head><title>Geocities</title></head></html>))
+      end)
+
+      assert MarkdownTools.convert(input) == expected
+    end
   end
 
   describe "compact" do
