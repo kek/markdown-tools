@@ -20,26 +20,28 @@ defmodule MarkdownToolsTest do
       """
 
       Bypass.expect_once(bypass, "GET", "site1", fn conn ->
-        Plug.Conn.resp(conn, 200, ~s(<html><head><title>Altavista</title></head></html>))
+        Plug.Conn.resp(conn, 200, ~s(<html><head><title>\nAltavista\n</title></head></html>))
       end)
 
       Bypass.expect_once(bypass, "GET", "site2", fn conn ->
         Plug.Conn.resp(conn, 200, ~s(<html><head><title>Geocities</title></head></html>))
       end)
 
-      assert MarkdownTools.convert(input) == expected
+      assert MarkdownTools.convert(input) == {:ok, expected}
     end
 
     test "Ignore stuff that's not URLs", %{bypass: bypass} do
       input = """
       http://localhost:#{bypass.port}/site1
       How about that one?
+      How about https://example.test
       http://localhost:#{bypass.port}/site2
       """
 
       expected = """
       - [Altavista](http://localhost:#{bypass.port}/site1)
       How about that one?
+      How about https://example.test
       - [Geocities](http://localhost:#{bypass.port}/site2)
       """
 
@@ -51,7 +53,7 @@ defmodule MarkdownToolsTest do
         Plug.Conn.resp(conn, 200, ~s(<html><head><title>Geocities</title></head></html>))
       end)
 
-      assert MarkdownTools.convert(input) == expected
+      assert MarkdownTools.convert(input) == {:ok, expected}
     end
   end
 
@@ -68,7 +70,7 @@ defmodule MarkdownToolsTest do
       World
       """
 
-      assert MarkdownTools.compact(input) == expected
+      assert MarkdownTools.compact(input) == {:ok, expected}
     end
   end
 end

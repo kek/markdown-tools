@@ -8,9 +8,16 @@ defmodule MarkdownTools do
           case File.read(file) do
             {:ok, input} ->
               case command do
-                "url-fix" -> {:ok, MarkdownTools.convert(input)}
-                "compact" -> {:ok, MarkdownTools.compact(input)}
-                other -> {:error, "Unknown command: #{other}"}
+                "url-fix" ->
+                  IO.puts("Fixing URLs in #{file}")
+                  MarkdownTools.convert(input)
+
+                "compact" ->
+                  IO.puts("Removing newlines in #{file}")
+                  MarkdownTools.compact(input)
+
+                other ->
+                  {:error, "Unknown command: #{other}"}
               end
 
             _ ->
@@ -22,9 +29,36 @@ defmodule MarkdownTools do
           {:error, message} -> IO.puts("Error: #{message}")
         end
 
+      [] ->
+        usage("markdown-tools")
+        System.stop(0)
+
+      [_] ->
+        usage("markdown-tools")
+        System.stop(0)
+
+      ["url-fix", file] ->
+        IO.puts("Fixing URLs in #{file}")
+
+        case MarkdownTools.convert(File.read!(file)) do
+          {:ok, output} -> File.write!(file, output)
+          {:error, message} -> IO.puts("Error: #{message}")
+        end
+
+        System.stop(0)
+
+      ["compact", file] ->
+        IO.puts("Removing newlines in #{file}")
+
+        case MarkdownTools.compact(File.read!(file)) do
+          {:ok, output} -> File.write!(file, output)
+          {:error, message} -> IO.puts("Error: #{message}")
+        end
+
+        System.stop(0)
+
       [arg1, arg2 | _] ->
-        IO.puts("Usage: #{arg1} #{arg2} -- <command> <input file>")
-        IO.puts("Where <command> is one of: url-fix, compact")
+        usage("#{arg1} #{arg2}")
     end
 
     # System.halt(0)
@@ -34,36 +68,52 @@ defmodule MarkdownTools do
     {:ok, self()}
   end
 
+  defp usage(cmd) do
+    IO.puts("Usage: #{cmd} <command> <input file>")
+    IO.puts("Where <command> is one of: url-fix, compact")
+  end
+
   def compact(input) do
-    input
-    |> String.split("\n")
-    |> Enum.reject(fn line -> line == "" end)
-    |> Enum.join("\n")
-    |> Kernel.<>("\n")
+    {:ok,
+     input
+     |> String.split("\n")
+     |> Enum.reject(fn line ->
+       if line == "" do
+         IO.puts("Skipping blank line")
+         true
+       else
+         IO.puts("Keep: #{line}...")
+         false
+       end
+     end)
+     |> Enum.join("\n")
+     |> Kernel.<>("\n")}
   end
 
   def convert(input) do
-    input
-    |> String.split("\n")
-    |> Enum.map(fn line ->
-      url_regexp = ~r(https?://\S*$)
+    {:ok,
+     input
+     |> String.split("\n")
+     |> Enum.map(fn line ->
+       url_regexp = ~r(^https?://\S*$)
 
-      if Regex.match?(url_regexp, line) do
-        IO.write("#{line} -> ")
+       if Regex.match?(url_regexp, line) do
+         IO.write("#{line} -> ")
 
-        {:ok, document} =
-          Tesla.get!(line).body
-          |> Floki.parse_document()
+         {:ok, document} =
+           Tesla.get!(line).body
+           |> Floki.parse_document()
 
-        [{"title", _, [title]}] = Floki.find(document, "title")
+         [{"title", _, [title]} | _] = Floki.find(document, "title")
+         title = String.trim(title)
 
-        IO.write(title <> "\n")
+         IO.write(title <> "\n")
 
-        "- [#{title}](#{line})"
-      else
-        line
-      end
-    end)
-    |> Enum.join("\n")
+         "- [#{title}](#{line})"
+       else
+         line
+       end
+     end)
+     |> Enum.join("\n")}
   end
 end

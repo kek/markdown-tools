@@ -35,7 +35,7 @@ defmodule MarkdownTools.MixProject do
 
   defp releases do
     [
-      example_cli_app: [
+      markdown_tools: [
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
           targets: [
