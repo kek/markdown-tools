@@ -33,15 +33,21 @@ defmodule MarkdownTools do
         usage("markdown-tools")
         System.stop(0)
 
-      [_] ->
-        usage("markdown-tools")
-        System.stop(0)
-
       ["url-fix", file] ->
         IO.puts("Fixing URLs in #{file}")
 
         case MarkdownTools.convert(File.read!(file)) do
           {:ok, output} -> File.write!(file, output)
+          {:error, message} -> IO.puts("Error: #{message}")
+        end
+
+        System.stop(0)
+
+      ["url-fix"] ->
+        IO.puts("Fixing URLs in stdin")
+
+        case MarkdownTools.convert(File.read!("/dev/stdin")) do
+          {:ok, output} -> File.write!("/dev/stdout", output)
           {:error, message} -> IO.puts("Error: #{message}")
         end
 
@@ -55,6 +61,20 @@ defmodule MarkdownTools do
           {:error, message} -> IO.puts("Error: #{message}")
         end
 
+        System.stop(0)
+
+      ["compact"] ->
+        IO.puts("Removing newlines in stdin")
+
+        case MarkdownTools.compact(File.read!("/dev/stdin")) do
+          {:ok, output} -> File.write!("/dev/stdout", output)
+          {:error, message} -> IO.puts("Error: #{message}")
+        end
+
+        System.stop(0)
+
+      [_] ->
+        usage("markdown-tools")
         System.stop(0)
 
       [arg1, arg2 | _] ->
@@ -79,10 +99,10 @@ defmodule MarkdownTools do
      |> String.split("\n")
      |> Enum.reject(fn line ->
        if line == "" do
-         IO.puts("Skipping blank line")
+         Logger.debug("Skipping blank line")
          true
        else
-         IO.puts("Keep: #{line}...")
+         Logger.debug("Keep: #{line}...")
          false
        end
      end)
