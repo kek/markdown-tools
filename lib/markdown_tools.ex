@@ -124,10 +124,18 @@ defmodule MarkdownTools do
            Tesla.get!(line).body
            |> Floki.parse_document()
 
-         [{"title", _, [title]} | _] = Floki.find(document, "title")
-         title = String.trim(title)
+         title =
+           case Floki.find(document, "title") do
+             [{"title", _, [title]} | _] -> String.trim(title)
+             [] -> "Unknown title"
+           end
 
-         IO.write(title <> "\n")
+         try do
+           IO.write(title <> "\n")
+         rescue
+           e in ArgumentError ->
+             IO.write("ERROR #{inspect(e)} #{inspect(title)}\n")
+         end
 
          "- [#{title}](#{line})"
        else
