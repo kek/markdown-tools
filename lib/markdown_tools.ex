@@ -120,24 +120,31 @@ defmodule MarkdownTools do
        if Regex.match?(url_regexp, line) do
          IO.write("#{line} -> ")
 
-         {:ok, document} =
-           Tesla.get!(line).body
-           |> Floki.parse_document()
+         case Tesla.get(line) do
+           {:ok, result} ->
+             {:ok, document} = Floki.parse_document(result.body)
 
-         title =
-           case Floki.find(document, "title") do
-             [{"title", _, [title]} | _] -> String.trim(title)
-             [] -> "Unknown title"
-           end
+             title =
+               document
+               |> Floki.find("title")
+               |> case do
+                 [{"title", _, [title]} | _] -> String.trim(title)
+                 [] -> "Unknown title"
+               end
 
-         try do
-           IO.write(title <> "\n")
-         rescue
-           e in ArgumentError ->
-             IO.write("ERROR #{inspect(e)} #{inspect(title)}\n")
+             try do
+               IO.write(title <> "\n")
+             rescue
+               e in ArgumentError ->
+                 IO.write("ERROR #{inspect(e)} #{inspect(title)}\n")
+             end
+
+             "- [#{title}](#{line})"
+
+           {:error, reason} ->
+             IO.write("ERROR #{inspect(reason)}\n")
+             line
          end
-
-         "- [#{title}](#{line})"
        else
          line
        end
